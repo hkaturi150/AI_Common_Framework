@@ -1,0 +1,42 @@
+What’s inside
+ai_core/
+├── llm/          LLM client, prompt templates, types
+├── rag/          Embedder, VectorStore, RAGPipeline
+├── agents/       Agent loop, @tool decorator
+├── pipeline/     ETL Pipeline with step chaining
+├── api/          FastAPI app factory, routers, schemas, middleware
+└── utils/        Structured logging, retry, timer, env
+How to use it in any of your 4 jobs
+
+Install once (editable, so changes reflect immediately):
+
+bash
+pip install -e path/to/ai_core_framework
+
+Minimal FastAPI service (3 lines):
+
+python
+from ai_core import create_app, LLMClient, LLMConfig
+app = create_app(llm=LLMClient(LLMConfig(provider="openai")))
+# uvicorn main:app — gives you /api/v1/chat, /embed, /rag, /health
+
+Agent with tools:
+
+python
+@tool(description="Search the web")
+async def search(query: str) -> str: ...
+
+agent = Agent(llm=llm, tools=[search])
+result = await agent.run("Find recent papers on RAG")
+
+ETL pipeline:
+
+python
+result = await (
+    Pipeline("ingest")
+    .step("load", load_files)
+    .step("clean", clean_text)
+    .step("index", embed_and_store)
+).run({"path": "./docs"})
+
+Switch providers with one config change — openai, anthropic, azure, or ollama all work through the same LLMClient interface. VectorStore backends (memory, chroma, pinecone, pgvector) swap the same way.
